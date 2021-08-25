@@ -12,11 +12,9 @@
 //! see [`CookieMiddleware`] for details
 //!
 use async_dup::{Arc, Mutex};
-use async_std::{
-    fs::{File, OpenOptions},
-    prelude::*,
-    sync::RwLock,
-};
+#[cfg(not(target_arch = "wasm32"))]
+use async_std::fs::{File, OpenOptions};
+use async_std::{prelude::*, sync::RwLock};
 use std::{
     convert::TryInto,
     io::{self, Cursor, SeekFrom},
@@ -60,6 +58,7 @@ pub use cookie_store::CookieStore;
 #[derive(Default, Clone, Debug)]
 pub struct CookieMiddleware {
     cookie_store: Arc<RwLock<CookieStore>>,
+    #[cfg(not(target_arch = "wasm32"))]
     file: Option<Arc<Mutex<File>>>,
 }
 
@@ -107,6 +106,7 @@ impl CookieMiddleware {
     pub fn with_cookie_store(cookie_store: CookieStore) -> Self {
         Self {
             cookie_store: Arc::new(RwLock::new(cookie_store)),
+            #[cfg(not(target_arch = "wasm32"))]
             file: None,
         }
     }
@@ -132,6 +132,7 @@ impl CookieMiddleware {
     ///     .with(CookieMiddleware::from_path("./cookies.ndjson").await?);
     /// # Ok(()) }) }
     /// ```
+    #[cfg(not(target_arch = "wasm32"))]
     pub async fn from_path(path: impl Into<PathBuf>) -> io::Result<Self> {
         let path = path.into();
         let file = OpenOptions::new()
@@ -144,6 +145,7 @@ impl CookieMiddleware {
         Self::from_file(file).await
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     async fn load_from_file(file: &mut File) -> Option<CookieStore> {
         let mut buf = Vec::new();
         file.read_to_end(&mut buf).await.ok();
@@ -173,6 +175,7 @@ impl CookieMiddleware {
     ///     .with(CookieMiddleware::from_file(file).await?);
     /// # Ok(()) }) }
     /// ```
+    #[cfg(not(target_arch = "wasm32"))]
     pub async fn from_file(file: impl Into<File>) -> io::Result<Self> {
         let mut file = file.into();
         let cookie_store = Self::load_from_file(&mut file).await;
@@ -182,6 +185,7 @@ impl CookieMiddleware {
         })
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     async fn save(&self) -> Result<()> {
         if let Some(ref file) = self.file {
             let mut string: Vec<u8> = vec![0];
@@ -229,6 +233,7 @@ impl CookieMiddleware {
             }
         }
 
+        #[cfg(not(target_arch = "wasm32"))]
         self.save().await?;
 
         Ok(())

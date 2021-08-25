@@ -8,6 +8,7 @@ keywords = ["surf", "cookies", "middleware"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/jbr/surf-cookie-middleware"
+resolver = "2"
 
 [dependencies]
 log = "0.4.14"
@@ -37,6 +38,11 @@ version = "0.16.0"
 default-features = false
 features = ["cookies"]
 
-[dev-dependencies.surf]
-version = "2.3.1"
+[target.'cfg(target_arch = "wasm32")'.dependencies.surf]
+version = "2.3"
+default-features = false
+features = ["wasm-client"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.surf]
+version = "2.3"
 default-features = true
